@@ -52,7 +52,7 @@ class mpc_config:
     MAX_STEER: float = 0.4189  # maximum steering angle [rad]
     MAX_DSTEER: float = np.deg2rad(180.0)  # maximum steering speed [rad/s]
     MAX_SPEED: float = 3.0  # maximum speed [m/s]
-    MIN_SPEED: float = 0.0  # minimum backward speed [m/s]
+    MIN_SPEED: float = 0.0 # minimum backward speed [m/s]
     MAX_ACCEL: float = 2.5  # maximum acceleration [m/ss]
     MAX_ITER = 3
     DU_TH = 0.1
@@ -90,7 +90,6 @@ class MPC(Node):
 
         local_traj_path = np.load("/home/kabir/sim_ws/src/mpc/spline_trajs.npy")
         self.local_path = local_traj_path
-
         self.config = mpc_config()
         self.odelta = None
         self.oa = None
@@ -169,7 +168,8 @@ class MPC(Node):
         ref_y = self.waypoints[:, 1]
         ref_yaw = self.waypoints[:, 2]
         ref_yaw = (ref_yaw + 2 * math.pi) % (2 * math.pi)
-        ref_v = self.waypoints[:, 3]
+        print(self.waypoints.shape)
+        ref_v = np.ones(self.waypoints.shape[0])
 
         # TODO: Calculate the next reference trajectory for the next T steps
         #       with current vehicle pose.
@@ -322,16 +322,14 @@ class MPC(Node):
 
         # TODO: publish drive message.
         if self.oa is not None:
-            steer_output = self.odelta[0]
-            steer_output, accel = self.odelta[0], self.oa[0]
-            speed_output = vehicle_state.v + self.oa[0] * self.config.DTK
+            di, ai = self.odelta[0], self.oa[0]
             msg = AckermannDriveStamped()
-            msg.drive.steering_angle = steer_output
-            msg.drive.speed = speed_output
-            # msg.drive.acceleration = float(accel)
-            msg.header.stamp = self.get_clock().now().to_msg()
+            msg.drive.acceleration = float(ai)
+            msg.drive.steering_angle = float(di)
+            self.old_input = di
+            msg.drive.speed = float(ref_v[self.target_ind]) * 0.75
             self.drive_pub_.publish(msg)
-            print(f'Driving command published speed={speed_output}, angle={steer_output}')
+            print(f'Driving command published speed={msg.drive.speed}, angle={msg.drive.steering_angle}')
             self.publish_waypoints()
 
     def mpc_prob_init(self):
@@ -637,7 +635,7 @@ class MPC(Node):
 
         return A, B, C
 
-    def mpc_prob_solve(self, ref_traj, path_predict, x0):
+    def mpc_prob_solve(self, ref_traj, path_predict, x0, dref):
         self.x0k.value = x0
 
         A_block = []
@@ -645,7 +643,7 @@ class MPC(Node):
         C_block = []
         for t in range(self.config.TK):
             A, B, C = self.get_model_matrix(
-                path_predict[2, t], path_predict[3, t], 0.0
+                path_predict[2, t], path_predict[3, t], dref[0,t]
             )
             A_block.append(A)
             B_block.append(B)
@@ -693,7 +691,9 @@ class MPC(Node):
         for i in range(self.config.MAX_ITER):
             xbar = self.predict_motion(x0, oa, od, ref_path)
             poa, pod = oa[:], od[:]
-            oa, od, ox, oy, oyaw, ov = self.linear_mpc_control(ref_path, xbar, x0, dref)
+            oa, od, ox, oy, oyaw, ov = self.mpc_prob_solve(ref_path, xbar, x0, dref)
+            print(oa)
+            print(poa)
             du = sum(abs(oa - poa)) + sum(abs(od - pod))  # calc u change value
             if du <= self.config.DU_TH:
                 break
@@ -709,10 +709,6 @@ class MPC(Node):
     #     :param od: delta of T steps of last time
     #     """
     #
-    #     if oa is None or od is None:
-    #         oa = [0.0] * self.config.TK
-    #         od = [0.0] * self.config.TK
-    #
     #     # Call the Motion Prediction function: Predict the vehicle motion for x-steps
     #     path_predict = self.predict_motion(x0, oa, od, ref_path)
     #     poa, pod = oa[:], od[:]
@@ -723,50 +719,50 @@ class MPC(Node):
     #     )
     #
     #     return mpc_a, mpc_delta, mpc_x, mpc_y, mpc_yaw, mpc_v, path_predict
-
-    def linear_mpc_control(self, xref, xbar, x0, dref):
-        """
-        Linear MPC control
-        xref: reference point
-        xbar: operational point
-        x0: initial state
-        dref: reference steer angle
-        """
-        x = cvxpy.Variable((self.config.NXK, self.config.TK + 1))
-        u = cvxpy.Variable((self.config.NU, self.config.TK))
-        cost = 0.0
-        constraints = []
-        for t in range(self.config.TK):
-            cost += cvxpy.quad_form(u[:, t], self.config.Rk)
-            if t != 0:
-                cost += cvxpy.quad_form(xref[:, t] - x[:, t], self.config.Qk)
-            A, B, C = self.get_model_matrix(xbar[2, t], xbar[3, t], dref[0, t])
-            constraints += [x[:, t + 1] == A @ x[:, t] + B @ u[:, t] + C]
-
-            if t < (self.config.TK - 1):
-                cost += cvxpy.quad_form(u[:, t + 1] - u[:, t], self.config.Rdk)
-                constraints += [cvxpy.abs(u[1, t + 1] - u[1, t]) <= self.config.MAX_DSTEER * self.config.DTK]
-
-        cost += cvxpy.quad_form(xref[:, self.config.TK] - x[:, self.config.TK], self.config.Qfk)
-        constraints += [x[:, 0] == x0]
-        constraints += [x[2, :] <= self.config.MAX_SPEED]
-        constraints += [x[2, :] >= self.config.MIN_SPEED]
-        constraints += [cvxpy.abs(u[0, :]) <= self.config.MAX_ACCEL]
-        constraints += [cvxpy.abs(u[1, :]) <= self.config.MAX_STEER]
-        prob = cvxpy.Problem(cvxpy.Minimize(cost), constraints)
-        prob.solve(solver=cvxpy.ECOS, verbose=False)
-
-        if prob.status == cvxpy.OPTIMAL or prob.status == cvxpy.OPTIMAL_INACCURATE:
-            ox = self.get_nparray_from_matrix(x.value[0, :])
-            oy = self.get_nparray_from_matrix(x.value[1, :])
-            ov = self.get_nparray_from_matrix(x.value[2, :])
-            oyaw = self.get_nparray_from_matrix(x.value[3, :])
-            oa = self.get_nparray_from_matrix(u.value[0, :])
-            odelta = self.get_nparray_from_matrix(u.value[1, :])
-        else:
-            print("Error: Cannot solve mpc..")
-            oa, odelta, ox, oy, oyaw, ov = None, None, None, None, None, None
-        return oa, odelta, ox, oy, oyaw, ov
+    #
+    # def linear_mpc_control(self, xref, xbar, x0, dref):
+    #     """
+    #     Linear MPC control
+    #     xref: reference point
+    #     xbar: operational point
+    #     x0: initial state
+    #     dref: reference steer angle
+    #     """
+    #     x = cvxpy.Variable((self.config.NXK, self.config.TK + 1))
+    #     u = cvxpy.Variable((self.config.NU, self.config.TK))
+    #     cost = 0.0
+    #     constraints = []
+    #     for t in range(self.config.TK):
+    #         cost += cvxpy.quad_form(u[:, t], self.config.Rk)
+    #         if t != 0:
+    #             cost += cvxpy.quad_form(xref[:, t] - x[:, t], self.config.Qk)
+    #         A, B, C = self.get_model_matrix(xbar[2, t], xbar[3, t], dref[0, t])
+    #         constraints += [x[:, t + 1] == A @ x[:, t] + B @ u[:, t] + C]
+    #
+    #         if t < (self.config.TK - 1):
+    #             cost += cvxpy.quad_form(u[:, t + 1] - u[:, t], self.config.Rdk)
+    #             constraints += [cvxpy.abs(u[1, t + 1] - u[1, t]) <= self.config.MAX_DSTEER * self.config.DTK]
+    #
+    #     cost += cvxpy.quad_form(xref[:, self.config.TK] - x[:, self.config.TK], self.config.Qfk)
+    #     constraints += [x[:, 0] == x0]
+    #     constraints += [x[2, :] <= self.config.MAX_SPEED]
+    #     constraints += [x[2, :] >= self.config.MIN_SPEED]
+    #     constraints += [cvxpy.abs(u[0, :]) <= self.config.MAX_ACCEL]
+    #     constraints += [cvxpy.abs(u[1, :]) <= self.config.MAX_STEER]
+    #     prob = cvxpy.Problem(cvxpy.Minimize(cost), constraints)
+    #     prob.solve(solver=cvxpy.OSQP, verbose=False)
+    #
+    #     if prob.status == cvxpy.OPTIMAL or prob.status == cvxpy.OPTIMAL_INACCURATE:
+    #         ox = self.get_nparray_from_matrix(x.value[0, :])
+    #         oy = self.get_nparray_from_matrix(x.value[1, :])
+    #         ov = self.get_nparray_from_matrix(x.value[2, :])
+    #         oyaw = self.get_nparray_from_matrix(x.value[3, :])
+    #         oa = self.get_nparray_from_matrix(u.value[0, :])
+    #         odelta = self.get_nparray_from_matrix(u.value[1, :])
+    #     else:
+    #         print("Error: Cannot solve mpc..")
+    #         oa, odelta, ox, oy, oyaw, ov = None, None, None, None, None, None
+    #     return oa, odelta, ox, oy, oyaw, ov
 
     def publish_ref_traj(self, pose_msg, ref_traj):
         """
