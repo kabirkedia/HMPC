@@ -29,7 +29,7 @@ class mpc_config:
     # ---------------------------------------------------
     # TODO: you may need to tune the following matrices
     Rk: list = field(
-        default_factory=lambda: np.diag([0.01, 160.0])  # np.diag([0.01, 100.0])
+        default_factory=lambda: np.diag([0.01, 20.0])  # np.diag([0.01, 100.0])
     )  # input cost matrix, penalty for inputs - [accel, steering_speed]
     Rdk: list = field(
         default_factory=lambda: np.diag([0.01, 20.0])  # np.diag([0.01, 100.0])
@@ -329,7 +329,6 @@ class MPC(Node):
             speed_output = max(0.75,speed_output)
             msg.drive.steering_angle = steer_output
             msg.drive.speed = speed_output
-            #msg.drive.acceleration = float(accel)
             msg.header.stamp = self.get_clock().now().to_msg()
             self.drive_pub_.publish(msg)
             print(f'Driving command published speed={speed_output}, angle={steer_output}')

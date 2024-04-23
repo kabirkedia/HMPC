@@ -54,6 +54,7 @@ ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
   scripts/mpc_node.py
   scripts/scratch.py
+  scripts/waypoint_logger.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
