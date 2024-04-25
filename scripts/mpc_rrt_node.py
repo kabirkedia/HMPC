@@ -97,7 +97,7 @@ class MPC_RRT(Node):
         super().__init__('rrt')
         # topics, not saved as attributes
         # TODO: grab topics from param file, you'll need to change the yaml file
-        pose_topic = "ego_racecar/odom"     # TBD: will need to be updated
+        pose_topic = "pf/pose/odom"     # TBD: will need to be updated
         scan_topic = "/scan"
         drive_topic = "/drive"
         og_topic = "/dynamic_map"
