@@ -29,15 +29,15 @@ Qf = Q  # state final matrix
 # iterative paramter
 MAX_ITER = 3  # Max iteration
 TARGET_SPEED = 3.0  # [m/s] target speed
-N_IND_SEARCH = 10  # Search index number
+N_IND_SEARCH = 20  # Search index number
 DT = 0.02  # [s] time tick
 LENGTH = 0.48  # [m]
 WIDTH = 0.268  # [m]
 WB = 0.33  # [m]
-MAX_STEER = np.deg2rad(50.0)  # maximum steering angle [rad]
-MAX_DSTEER = np.deg2rad(10.0)  # maximum steering speed [rad/s]
-MAX_SPEED = 10.0  # maximum speed [m/s]
-MIN_SPEED = 0  # minimum speed [m/s]
+MAX_STEER = 0.4189  # maximum steering angle [rad]
+MAX_DSTEER = np.deg2rad(180.0)  # maximum steering speed [rad/s]
+MAX_SPEED = 3.0  # maximum speed [m/s]
+MIN_SPEED = 0.5 # minimum speed [m/s]
 MAX_ACCEL = 2.5  # maximum accel [m/ss]
 
 #Obstacle avoidance constants
@@ -90,11 +90,11 @@ disc_vel = np.array([1, 1.5, 2])
 a = 0
 spline_num = 0
 
-splines = np.zeros((30, T + 1, 6))  #x,y,yaw,r,theta
+splines = np.zeros((100, T + 1, 6))  #x,y,yaw,r,theta
 for v in disc_vel:
 
     if (v == 1):
-        disc_del = np.linspace(np.deg2rad(-30.0), np.deg2rad(30.0), 13)
+        disc_del = np.linspace(np.deg2rad(-25.0), np.deg2rad(25.0), 30)
         disc_del = np.append(disc_del, 0)
         DT = 0.02
 
@@ -108,6 +108,7 @@ for v in disc_vel:
         disc_del = np.append(disc_del, 0)
         DT = 0.02
 
+    print("disc",disc_del.shape)
     for d in disc_del:
         spline_state = State(v=v)
 

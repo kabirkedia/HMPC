@@ -29,16 +29,16 @@ class mpc_config:
     # ---------------------------------------------------
     # TODO: you may need to tune the following matrices
     Rk: list = field(
-        default_factory=lambda: np.diag([0.01, 160.0])  # np.diag([0.01, 100.0])
+        default_factory=lambda: np.diag([0.01, 20.0])  # np.diag([0.01, 100.0])
     )  # input cost matrix, penalty for inputs - [accel, steering_speed]
     Rdk: list = field(
-        default_factory=lambda: np.diag([0.01, 20.0])  # np.diag([0.01, 100.0])
+        default_factory=lambda: np.diag([0.01, 25.0])  # np.diag([0.01, 100.0])
     )  # input difference cost matrix, penalty for change of inputs - [accel, steering_speed]
     Qk: list = field(
-        default_factory=lambda: np.diag([25, 25, 5.0, 22.0])  # np.diag([13.5, 13.5, 5.5, 13.0])
+        default_factory=lambda: np.diag([13.5, 13.5, 5.5, 13.0])  # np.diag([13.5, 13.5, 5.5, 13.0])
     )  # state error cost matrix, for the the next (T) prediction time steps [x, y, delta, v, yaw, yaw-rate, beta]
     Qfk: list = field(
-        default_factory=lambda: np.diag([25, 25, 5.0, 22.0])  # np.diag([13.5, 13.5, 5.5, 13.0])
+        default_factory=lambda: np.diag([13.5, 13.5, 5.5, 13.0])  # np.diag([13.5, 13.5, 5.5, 13.0])
     )  # final state error matrix, penalty  for the final state constraints: [x, y, v, yaw]
     # ---------------------------------------------------
 
@@ -86,7 +86,7 @@ class MPC(Node):
         self.drive_pub_ = self.create_publisher(AckermannDriveStamped, '/drive', 0)
 
         # TODO: get waypoints here
-        self.waypoints = np.genfromtxt('/home/team5/f1tenth_ws/src/HMPC/waypoints/tepper_waypoints.csv', delimiter=",")
+        self.waypoints = np.genfromtxt('/home/team5/f1tenth_ws/src/HMPC/waypoints/practice2_waypoints.csv', delimiter=",")
 
         local_traj_path = np.load("/home/team5/f1tenth_ws/src/HMPC/spline_trajs.npy")
         self.local_path = local_traj_path
