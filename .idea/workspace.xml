@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f920a611-60e5-4003-9c87-2d02b9466a5d" name="Changes" comment="" />
+    <list default="true" id="f920a611-60e5-4003-9c87-2d02b9466a5d" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/interpolate.py" beforeDir="false" afterPath="$PROJECT_DIR$/interpolate.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/mpc_node.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/mpc_node.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -16,6 +20,9 @@
         <option value="Python Script" />
       </list>
     </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 6
@@ -68,6 +75,7 @@
       <workItem from="1712674125707" duration="12051000" />
       <workItem from="1712939707652" duration="7841000" />
       <workItem from="1713626512645" duration="20757000" />
+      <workItem from="1713720022886" duration="3022000" />
     </task>
     <servers />
   </component>
