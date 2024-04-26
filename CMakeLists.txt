@@ -55,6 +55,7 @@ install(PROGRAMS
   scripts/mpc_node.py
   scripts/scratch.py
   scripts/waypoint_logger.py
+  scripts/mpc_rrt_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

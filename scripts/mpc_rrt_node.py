@@ -97,7 +97,7 @@ class MPC_RRT(Node):
         super().__init__('rrt')
         # topics, not saved as attributes
         # TODO: grab topics from param file, you'll need to change the yaml file
-        pose_topic = "pf/pose/odom"     # TBD: will need to be updated
+        pose_topic = "/pf/pose/odom"     # TBD: will need to be updated
         scan_topic = "/scan"
         drive_topic = "/drive"
         og_topic = "/dynamic_map"
@@ -155,7 +155,7 @@ class MPC_RRT(Node):
         # global planner parameters
         self.x_current_goal = 0.0       
         self.y_current_goal = 0.0  
-        self.waypoints = np.genfromtxt("/sim_ws/src/lab7/f1tenth_lab7/waypoints/practice2_waypoints.csv", delimiter = ',')
+        self.waypoints = np.genfromtxt("/home/team5/f1tenth_ws/src/HMPC/waypoints/practice4_waypoints.csv", delimiter = ',')
         self.rrt_waypoints = self.waypoints[:, 0 : 2]    
 
         # physical car attributes
@@ -164,8 +164,8 @@ class MPC_RRT(Node):
 
         # RRT parameters
         self.max_rrt_iterations = 1000
-        self.lookahead_distance = 1.5   # m
-        self.steer_range = 0.3          # m``
+        self.lookahead_distance = 1.2   # m
+        self.steer_range = 0.4          # m``
         self.goal_tolerance = 0.2       # m
         self.collision_checking_points = 20
 
@@ -175,7 +175,7 @@ class MPC_RRT(Node):
 
         # pure pursuit parameters
         self.clamp_angle = 30.0         # deg
-        self.steering_gain = 1.0
+        self.steering_gain = 1.2
 
         # initialize occupancy grid
         self.occupancy_grid = OccupancyGrid()
@@ -647,11 +647,11 @@ class MPC_RRT(Node):
     def get_speed(self, angle):
         abs_angle = np.abs(angle)
         if abs_angle >= np.deg2rad(15):
-            speed = 0.75
+            speed = 1.0
         elif abs_angle >= np.deg2rad(10):
-            speed = 1.25
+            speed = 1.3
         elif abs_angle >= np.deg2rad(5):
-            speed = 1.5
+            speed = 1.75
         else:
             speed = 2.0
         return speed
@@ -926,7 +926,7 @@ class MPC_RRT(Node):
 
             if (self.is_occupied(goal_x_grid, goal_y_grid)):
                 self.goal_tolerance = 0.9
-                self.sample_bias = 0.0
+                self.sample_bias = 0.1
             else:
                 self.goal_tolerance = 0.2
                 self.sample_bias = 0.7
