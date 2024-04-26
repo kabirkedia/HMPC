@@ -64,7 +64,7 @@ def main(args=None):
 
         # record clicked waypoints and save to csv
         recorded_waypoints = waypoint_logger.clicked_waypoints
-        save_recorded_waypoints(recorded_waypoints, "/home/team5/f1tenth_ws/src/HMPC/waypoints/practice4_waypoints.csv")
+        save_recorded_waypoints(recorded_waypoints, "/home/team5/f1tenth_ws/src/HMPC/waypoints/race3_waypoints.csv")
 
         sys.exit(0)
 

@@ -155,7 +155,7 @@ class MPC_RRT(Node):
         # global planner parameters
         self.x_current_goal = 0.0       
         self.y_current_goal = 0.0  
-        self.waypoints = np.genfromtxt("/home/team5/f1tenth_ws/src/HMPC/waypoints/practice4_waypoints.csv", delimiter = ',')
+        self.waypoints = np.genfromtxt("/home/team5/f1tenth_ws/src/HMPC/waypoints/race3_waypoints.csv", delimiter = ',')
         self.rrt_waypoints = self.waypoints[:, 0 : 2]    
 
         # physical car attributes
