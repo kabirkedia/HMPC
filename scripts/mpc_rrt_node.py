@@ -61,7 +61,7 @@ class mpc_config:
 
     N_IND_SEARCH: int = 20  # Search index number
     DTK: float = 0.1  # time step [s] kinematic
-    dlk: float = 0.03  # dist step [m] kinematic
+    dlk: float = 0.05  # dist step [m] kinematic
     LENGTH: float = 0.58  # Length of the vehicle [m]
     WIDTH: float = 0.31  # Width of the vehicle [m]
     WB: float = 0.33  # Wheelbase [m]
@@ -155,7 +155,7 @@ class MPC_RRT(Node):
         # global planner parameters
         self.x_current_goal = 0.0       
         self.y_current_goal = 0.0  
-        self.waypoints = np.genfromtxt("/home/team5/f1tenth_ws/src/HMPC/waypoints/race3_waypoints.csv", delimiter = ',')
+        self.waypoints = np.genfromtxt("/home/team5/f1tenth_ws/src/HMPC/waypoints/tepper_waypoints_new.csv", delimiter = ',')
         self.rrt_waypoints = self.waypoints[:, 0 : 2]    
 
         # physical car attributes
@@ -164,7 +164,7 @@ class MPC_RRT(Node):
 
         # RRT parameters
         self.max_rrt_iterations = 1000
-        self.lookahead_distance = 1.2   # m
+        self.lookahead_distance = 1.5   # m
         self.steer_range = 0.4          # m``
         self.goal_tolerance = 0.2       # m
         self.collision_checking_points = 20
@@ -192,9 +192,11 @@ class MPC_RRT(Node):
         self.oa = None
         self.init_flag = 0
         self.velocity_gain = 3.0
+        self.final_speed_gain = 1.1
 
         # initialize MPC problem
         self.mpc_prob_init()
+
 
 
     '''MPC functions'''
